@@ -6,9 +6,11 @@ spring:
     username: sa
     password:
     driver-class-name: org.h2.Driver
+  flyway:
+    enabled: true
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     open-in-view: false
   h2:
     console:
@@ -17,4 +19,4 @@ app:
   jwt:
     # Replace JWT_SECRET with a long random value outside local development.
     secret: ${JWT_SECRET:VetSM-local-development-secret-change-before-deploy-2026}
-    expiration-ms: 86400000
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}

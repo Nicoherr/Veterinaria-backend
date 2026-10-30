@@ -9,7 +9,8 @@ VetSM Backend es una API REST para la gestión de una clínica veterinaria. Perm
 - **Autenticación JWT stateless:** los tokens se envían en el encabezado `Authorization: Bearer <token>`; no se mantienen sesiones en el servidor.
 - **Seguridad con Spring Security:** `JwtAuthenticationFilter` valida el token y establece la identidad del usuario en cada solicitud protegida.
 - **Manejo global de excepciones:** `GlobalExceptionHandler`, implementado con `@RestControllerAdvice`, normaliza las respuestas de error.
-- **Base de datos H2 en memoria:** facilita el desarrollo local; los datos no son persistentes al reiniciar la aplicación.
+- **Base de datos:** H2 en memoria para desarrollo y pruebas; MySQL para producción.
+- **Migraciones versionadas:** Flyway crea y actualiza el esquema; Hibernate valida el esquema sin modificarlo.
 - **Docker y Docker Compose:** incluye `Dockerfile` y `docker-compose.yml` para construir y ejecutar el backend en un contenedor.
 - **Documentación OpenAPI:** Swagger UI permite explorar e invocar los endpoints.
 
@@ -58,6 +59,24 @@ Compose publica el servicio en el puerto `8080`. Para detenerlo, ejecuta `docker
 
 Para la consola H2 local, utiliza JDBC URL `jdbc:h2:mem:vetsm`, usuario `sa` y contraseña vacía.
 
+### Perfiles de base de datos
+
+La configuración predeterminada utiliza H2 en memoria. Para producción, activa el perfil `prod` y configura las variables requeridas:
+
+```bash
+SPRING_PROFILES_ACTIVE=prod
+SPRING_DATASOURCE_URL=jdbc:mysql://<host>:3306/<base_de_datos>
+SPRING_DATASOURCE_USERNAME=<usuario>
+SPRING_DATASOURCE_PASSWORD=<contraseña>
+JWT_SECRET=<secreto_aleatorio_largo>
+```
+
+Flyway aplica las migraciones de `src/main/resources/db/migration` al iniciar. No se debe cambiar una migración ya aplicada; los cambios de esquema se agregan en una nueva migración.
+
+### Pruebas
+
+Ejecuta `./mvnw test` desde la raíz del backend. La suite combina pruebas de integración con Spring y pruebas unitarias de controladores con Mockito.
+
 ## Endpoints de la API
 
 | Método | Ruta | Acceso | Descripción |
@@ -75,10 +94,10 @@ Para los endpoints autenticados, envía el token recibido al iniciar sesión o r
 
 | Variable | Valor por defecto | Uso |
 |---|---|---|
-| `PORT` | `8080` (puerto habitual de Spring Boot; Compose publica `8080`) | El proyecto no consume actualmente esta variable. Para cambiar el puerto de Spring Boot, utiliza `SERVER_PORT`. |
-| `JWT_SECRET` | `VetSM-local-development-secret-change-before-deploy-2026` | Clave de firma JWT. Está conectada a la configuración; reemplázala por un secreto aleatorio y seguro fuera del desarrollo local. |
-| `JWT_EXPIRATION_MS` | `86400000` ms (24 horas) | Duración de los tokens. Ese valor está configurado en la aplicación, pero la variable no está conectada actualmente; el valor se puede establecer con `APP_JWT_EXPIRATION_MS`. |
-| `CORS_ALLOWED_ORIGINS` | `http://localhost:5173,http://localhost:3000` | Orígenes permitidos configurados para CORS. La variable todavía no está conectada; los orígenes están definidos en `SecurityConfig`. |
-| `SPRING_DATASOURCE_URL` | `jdbc:h2:mem:vetsm;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE` | URL JDBC de la base de datos. Spring Boot permite sobrescribir esta propiedad con la variable de entorno indicada. |
+| `JWT_SECRET` | Clave local de desarrollo | Clave de firma JWT; obligatoria con perfil `prod`. |
+| `JWT_EXPIRATION_MS` | `86400000` ms (24 horas) | Duración de los tokens. |
+| `SPRING_DATASOURCE_URL` | URL H2 local | URL JDBC; obligatoria con perfil `prod`. |
+| `SPRING_DATASOURCE_USERNAME` | `sa` local | Usuario de la base; obligatorio con perfil `prod`. |
+| `SPRING_DATASOURCE_PASSWORD` | Vacía local | Contraseña de la base; obligatoria con perfil `prod`. |
 
-> **Nota:** la configuración predeterminada de JWT es solo para desarrollo. La base H2 es volátil; al reiniciar la aplicación, se pierden los datos almacenados.
+> **Nota:** la configuración predeterminada de JWT y H2 es solo para desarrollo. La base H2 es volátil; al reiniciar la aplicación, se pierden los datos almacenados. En producción, utiliza credenciales y secretos administrados por el entorno de despliegue.
