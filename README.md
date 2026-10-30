@@ -66,6 +66,7 @@ SPRING_DATASOURCE_URL='jdbc:mysql://<host>:3306/<base_de_datos>?useSSL=true&serv
 SPRING_DATASOURCE_USERNAME=<usuario>
 SPRING_DATASOURCE_PASSWORD=<contraseña>
 JWT_SECRET=<secreto_aleatorio_largo>
+CORS_ALLOWED_ORIGINS=https://<dominio-frontend>
 ```
 
 Flyway aplica las migraciones de `src/main/resources/db/migration` al iniciar. No se debe cambiar una migración ya aplicada; los cambios de esquema se agregan en una nueva migración.
@@ -96,5 +97,6 @@ Para los endpoints autenticados, envía el token recibido al iniciar sesión o r
 | `SPRING_DATASOURCE_URL` | `jdbc:mysql://localhost:3306/vetsm?...` | URL JDBC de MySQL; obligatoria con perfil `prod`. |
 | `SPRING_DATASOURCE_USERNAME` | `vetsm` local | Usuario de la base; obligatorio con perfil `prod`. |
 | `SPRING_DATASOURCE_PASSWORD` | `vetsm_dev_password` local | Contraseña local; define una segura en producción. |
+| `CORS_ALLOWED_ORIGINS` | `http://localhost:5173,http://localhost:3000` | Lista de orígenes frontend separados por comas; en producción configura el dominio HTTPS publicado. |
 
 > **Nota:** los valores de MySQL y JWT predeterminados son solo para desarrollo local. En producción, usa credenciales y secretos administrados por el entorno de despliegue.
