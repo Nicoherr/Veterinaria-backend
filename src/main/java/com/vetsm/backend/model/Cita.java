@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -33,6 +34,7 @@ public class Cita {
 
     private LocalTime hora;
 
+    @Column(length = 500)
     private String motivo;
 
     @ManyToOne(optional = false)

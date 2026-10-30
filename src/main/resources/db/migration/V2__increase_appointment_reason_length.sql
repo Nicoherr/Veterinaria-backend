@@ -1,0 +1,2 @@
+ALTER TABLE citas
+    MODIFY COLUMN motivo VARCHAR(500) NULL;

@@ -34,7 +34,7 @@ En la estructura actual, la configuración de seguridad está en `security/`; to
 
 ### Opción 1: ejecución local
 
-Desde la carpeta `backend/`, ejecuta:
+Desde la raíz del repositorio backend, ejecuta:
 
 ```bash
 ./mvnw spring-boot:run
