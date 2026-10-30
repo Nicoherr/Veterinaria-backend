@@ -9,7 +9,7 @@ VetSM Backend es una API REST para la gestión de una clínica veterinaria. Perm
 - **Autenticación JWT stateless:** los tokens se envían en el encabezado `Authorization: Bearer <token>`; no se mantienen sesiones en el servidor.
 - **Seguridad con Spring Security:** `JwtAuthenticationFilter` valida el token y establece la identidad del usuario en cada solicitud protegida.
 - **Manejo global de excepciones:** `GlobalExceptionHandler`, implementado con `@RestControllerAdvice`, normaliza las respuestas de error.
-- **Base de datos:** H2 en memoria para desarrollo y pruebas; MySQL para producción.
+- **Base de datos MySQL:** se utiliza en desarrollo, pruebas y producción; no depende de una base de datos en memoria.
 - **Migraciones versionadas:** Flyway crea y actualiza el esquema; Hibernate valida el esquema sin modificarlo.
 - **Docker y Docker Compose:** incluye `Dockerfile` y `docker-compose.yml` para construir y ejecutar el backend en un contenedor.
 - **Documentación OpenAPI:** Swagger UI permite explorar e invocar los endpoints.
@@ -44,28 +44,25 @@ La API estará disponible en `http://localhost:8080`.
 
 ### Opción 2: ejecución con Docker Compose
 
-Desde la carpeta `backend/`, ejecuta:
+Desde la raíz del backend, ejecuta:
 
 ```bash
-docker-compose up --build -d
+docker compose up --build -d
 ```
 
-Compose publica el servicio en el puerto `8080`. Para detenerlo, ejecuta `docker-compose down`.
+Compose inicia MySQL y el backend; MySQL persiste sus datos en un volumen Docker. El backend espera a que la base de datos esté lista. Para detener los servicios conserva los datos con `docker compose down`; para borrar también la base local, usa `docker compose down -v`.
 
 ### Herramientas
 
 - **Swagger UI:** [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
-- **Consola H2:** [http://localhost:8080/h2-console](http://localhost:8080/h2-console)
-
-Para la consola H2 local, utiliza JDBC URL `jdbc:h2:mem:vetsm`, usuario `sa` y contraseña vacía.
 
 ### Perfiles de base de datos
 
-La configuración predeterminada utiliza H2 en memoria. Para producción, activa el perfil `prod` y configura las variables requeridas:
+La configuración predeterminada conecta a MySQL local (`localhost:3306`, base `vetsm`, usuario `vetsm`). Para iniciar MySQL junto con el backend en desarrollo, usa Docker Compose. Para producción, activa el perfil `prod` y configura las variables requeridas:
 
 ```bash
 SPRING_PROFILES_ACTIVE=prod
-SPRING_DATASOURCE_URL=jdbc:mysql://<host>:3306/<base_de_datos>
+SPRING_DATASOURCE_URL='jdbc:mysql://<host>:3306/<base_de_datos>?useSSL=true&serverTimezone=UTC'
 SPRING_DATASOURCE_USERNAME=<usuario>
 SPRING_DATASOURCE_PASSWORD=<contraseña>
 JWT_SECRET=<secreto_aleatorio_largo>
@@ -75,7 +72,7 @@ Flyway aplica las migraciones de `src/main/resources/db/migration` al iniciar. N
 
 ### Pruebas
 
-Ejecuta `./mvnw test` desde la raíz del backend. La suite combina pruebas de integración con Spring y pruebas unitarias de controladores con Mockito.
+Las pruebas de integración también requieren MySQL. Inicia el servicio con `docker compose up -d mysql` y luego ejecuta `./mvnw test` desde la raíz del backend. La suite combina pruebas de integración con Spring y pruebas unitarias de controladores con Mockito. No se usa H2.
 
 ## Endpoints de la API
 
@@ -96,8 +93,8 @@ Para los endpoints autenticados, envía el token recibido al iniciar sesión o r
 |---|---|---|
 | `JWT_SECRET` | Clave local de desarrollo | Clave de firma JWT; obligatoria con perfil `prod`. |
 | `JWT_EXPIRATION_MS` | `86400000` ms (24 horas) | Duración de los tokens. |
-| `SPRING_DATASOURCE_URL` | URL H2 local | URL JDBC; obligatoria con perfil `prod`. |
-| `SPRING_DATASOURCE_USERNAME` | `sa` local | Usuario de la base; obligatorio con perfil `prod`. |
-| `SPRING_DATASOURCE_PASSWORD` | Vacía local | Contraseña de la base; obligatoria con perfil `prod`. |
+| `SPRING_DATASOURCE_URL` | `jdbc:mysql://localhost:3306/vetsm?...` | URL JDBC de MySQL; obligatoria con perfil `prod`. |
+| `SPRING_DATASOURCE_USERNAME` | `vetsm` local | Usuario de la base; obligatorio con perfil `prod`. |
+| `SPRING_DATASOURCE_PASSWORD` | `vetsm_dev_password` local | Contraseña local; define una segura en producción. |
 
-> **Nota:** la configuración predeterminada de JWT y H2 es solo para desarrollo. La base H2 es volátil; al reiniciar la aplicación, se pierden los datos almacenados. En producción, utiliza credenciales y secretos administrados por el entorno de despliegue.
+> **Nota:** los valores de MySQL y JWT predeterminados son solo para desarrollo local. En producción, usa credenciales y secretos administrados por el entorno de despliegue.
