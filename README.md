@@ -58,7 +58,7 @@ Compose inicia MySQL y el backend; MySQL persiste sus datos en un volumen Docker
 
 ### Perfiles de base de datos
 
-La configuración predeterminada conecta a MySQL local (`localhost:3306`, base `vetsm`, usuario `vetsm`). Para iniciar MySQL junto con el backend en desarrollo, usa Docker Compose. Para producción, activa el perfil `prod` y configura las variables requeridas:
+El perfil `dev` se activa de forma predeterminada y conecta a MySQL local (`localhost:3306`, base `vetsm`, usuario `vetsm`). También se puede activar explícitamente con `SPRING_PROFILES_ACTIVE=dev`. Para iniciar MySQL junto con el backend en desarrollo, usa Docker Compose. Para producción, activa el perfil `prod` y configura las variables requeridas:
 
 ```bash
 SPRING_PROFILES_ACTIVE=prod
