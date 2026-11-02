@@ -58,7 +58,7 @@ Compose inicia MySQL y el backend; MySQL persiste sus datos en un volumen Docker
 
 ### Perfiles de base de datos
 
-El perfil `dev` se activa de forma predeterminada y conecta a MySQL local (`localhost:3306`, base `vetsm`, usuario `vetsm`). También se puede activar explícitamente con `SPRING_PROFILES_ACTIVE=dev`. Para iniciar MySQL junto con el backend en desarrollo, usa Docker Compose. Para producción, activa el perfil `prod` y configura las variables requeridas:
+El perfil `dev` se activa de forma predeterminada y conecta a MySQL local (`localhost:3306`, base `vetsm`, usuario `vetsm`). También se puede activar explícitamente con `SPRING_PROFILES_ACTIVE=dev`. Docker Compose activa el perfil `docker`, que conecta el backend al servicio MySQL usando el host `mysql`. Para producción, activa el perfil `prod` y configura las variables requeridas:
 
 ```bash
 SPRING_PROFILES_ACTIVE=prod
@@ -75,7 +75,7 @@ Flyway aplica las migraciones de `src/main/resources/db/migration` al iniciar. N
 
 ### Pruebas
 
-Las pruebas de integración también requieren MySQL. Inicia el servicio con `docker compose up -d mysql` y luego ejecuta `./mvnw test` desde la raíz del backend. La suite combina pruebas de integración con Spring y pruebas unitarias de controladores con Mockito. No se usa H2.
+Las pruebas de integración usan el perfil `test` y también requieren MySQL local. Inicia el servicio con `docker compose up -d mysql` y luego ejecuta `./mvnw test` desde la raíz del backend. La suite combina pruebas de integración con Spring y pruebas unitarias de controladores con Mockito. No se usa H2.
 
 ## Endpoints de la API
 
