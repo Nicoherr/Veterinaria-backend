@@ -3,3 +3,6 @@ target/
 .git/
 .mvn/
 .DS_Store
+.env
+.env.*
+!.env.example

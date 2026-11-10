@@ -30,7 +30,7 @@ En la estructura actual, la configuración de seguridad está en `security/`; to
 
 ## Requisitos y ejecución
 
-**Requisitos:** Java 17 o superior. Para la ejecución con contenedores, Docker y Docker Compose.
+**Requisitos:** Java 25 o superior. Para la ejecución con contenedores, Docker y Docker Compose.
 
 ### Opción 1: ejecución local
 
@@ -51,6 +51,16 @@ docker compose up --build -d
 ```
 
 Compose inicia MySQL y el backend; MySQL persiste sus datos en un volumen Docker. El backend espera a que la base de datos esté lista. Para detener los servicios conserva los datos con `docker compose down`; para borrar también la base local, usa `docker compose down -v`.
+
+### Despliegue en EC2
+
+El despliegue completo para EC2 está definido en `docker-compose.aws.yml`. Clona este repositorio en `~/vetsm-app/Veterinaria-backend` y el frontend en `~/vetsm-app/Veterinaria-frontend`, copia `.env.example` a `.env`, configura los valores reales sin subir el archivo y ejecuta desde la carpeta backend:
+
+```bash
+docker compose -f docker-compose.aws.yml up --build -d
+```
+
+Compose levanta MySQL sin publicar su puerto, el backend con el perfil `prod` y el frontend servido por Nginx en el puerto HTTP 80. La base persiste en el volumen `mysql_data`; conserva el volumen al actualizar o detener la aplicación. Consulta la guía de despliegue EC2 para configurar el grupo de seguridad y las variables.
 
 ### Herramientas
 
