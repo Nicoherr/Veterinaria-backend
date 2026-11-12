@@ -81,6 +81,12 @@ docker compose -f docker-compose.aws.yml logs -f backend
 
 La aplicación queda en `http://<PUBLIC_IP>/` y la API en `http://<PUBLIC_IP>:8080/api`. Para detener los contenedores sin borrar los datos, ejecuta `docker compose -f docker-compose.aws.yml down`; `down -v` también elimina el volumen persistente de MySQL.
 
+#### CI/CD hacia EC2
+
+Los workflows `deploy-ec2.yml` de ambos repositorios ejecutan sus pruebas en GitHub-hosted runners y, si pasan, despliegan ambos repositorios en EC2. Para habilitarlos, registra un runner self-hosted con la etiqueta `vetsm-ec2` en cada repositorio, ejecútalos como el usuario `ubuntu` y asegúrate de que ese usuario pueda usar Docker. Los workflows se disparan con cambios en `main` o manualmente; no se ejecutan para pull requests porque el runner tiene acceso al host de despliegue. El despliegue usa las carpetas existentes bajo `~/vetsm-app` y conserva `.env` y el volumen de MySQL.
+
+El runner se conecta a GitHub desde EC2; no es necesario abrir SSH a los rangos de IP de GitHub Actions. No compartas el token temporal de registro del runner ni guardes secretos de producción en el repositorio.
+
 ### Herramientas
 
 - **Swagger UI:** [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)

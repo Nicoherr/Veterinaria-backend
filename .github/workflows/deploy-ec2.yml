@@ -1,0 +1,77 @@
+name: CI/CD VetSM Backend to EC2
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vetsm-ec2-deploy
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: vetsm
+          MYSQL_USER: vetsm
+          MYSQL_PASSWORD: vetsm_test_password
+          MYSQL_ROOT_PASSWORD: vetsm_root_test_password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pvetsm_root_test_password"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      SPRING_PROFILES_ACTIVE: test
+      SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/vetsm?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: vetsm
+      SPRING_DATASOURCE_PASSWORD: vetsm_test_password
+      JWT_SECRET: vetsm-ci-only-secret-not-for-deployment
+      CORS_ALLOWED_ORIGINS: http://localhost:5173
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+
+      - name: Run tests
+        run: ./mvnw -B test
+
+  deploy:
+    needs: verify
+    if: github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, linux, x64, vetsm-ec2]
+    timeout-minutes: 30
+    steps:
+      - name: Pull both repositories and deploy
+        shell: bash
+        run: |
+          set -euo pipefail
+          flock -w 300 /tmp/vetsm-ec2-deploy.lock bash -euo pipefail -c '
+            backend="$HOME/vetsm-app/Veterinaria-backend"
+            frontend="$HOME/vetsm-app/Veterinaria-frontend"
+
+            test -f "$backend/.env"
+            git -C "$backend" pull --ff-only origin main
+            git -C "$frontend" pull --ff-only origin main
+
+            cd "$backend"
+            docker compose -f docker-compose.aws.yml build backend
+            docker compose -f docker-compose.aws.yml build frontend
+            docker compose -f docker-compose.aws.yml up -d
+            docker compose -f docker-compose.aws.yml ps
+          '
