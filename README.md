@@ -30,7 +30,7 @@ En la estructura actual, la configuración de seguridad está en `security/`; to
 
 ## Requisitos y ejecución
 
-**Requisitos:** Java 17 o superior. Para la ejecución con contenedores, Docker y Docker Compose.
+**Requisitos:** Java 25 o superior. Para la ejecución con contenedores, Docker y Docker Compose.
 
 ### Opción 1: ejecución local
 
@@ -69,6 +69,7 @@ nano .env
 ```
 
 Define `PUBLIC_IP` con la IP pública de EC2. Genera valores únicos para `MYSQL_PASSWORD`, `MYSQL_ROOT_PASSWORD` y `JWT_SECRET` (por ejemplo, `openssl rand -base64 48` para los secretos) y no publiques el archivo `.env`.
+Si cambias `HTTP_PORT` de `80`, define también `CORS_ALLOWED_ORIGINS` con el origen del frontend, incluyendo ese puerto.
 
 Desde `~/vetsm-app/Veterinaria-backend`, inicia y verifica los servicios:
 
@@ -86,7 +87,7 @@ La aplicación queda en `http://<PUBLIC_IP>/` y la API en `http://<PUBLIC_IP>:80
 
 ### Perfiles de base de datos
 
-La configuración predeterminada conecta a MySQL local (`localhost:3306`, base `vetsm`, usuario `vetsm`). Para iniciar MySQL junto con el backend en desarrollo, usa Docker Compose. Para producción, activa el perfil `prod` y configura las variables requeridas:
+El perfil `dev` se activa de forma predeterminada y conecta a MySQL local (`localhost:3306`, base `vetsm`, usuario `vetsm`). También se puede activar explícitamente con `SPRING_PROFILES_ACTIVE=dev`. Docker Compose activa el perfil `docker`, que conecta el backend al servicio MySQL usando el host `mysql`. Para producción, activa el perfil `prod` y configura las variables requeridas:
 
 ```bash
 SPRING_PROFILES_ACTIVE=prod
@@ -103,7 +104,7 @@ Flyway aplica las migraciones de `src/main/resources/db/migration` al iniciar. N
 
 ### Pruebas
 
-Las pruebas de integración también requieren MySQL. Inicia el servicio con `docker compose up -d mysql` y luego ejecuta `./mvnw test` desde la raíz del backend. La suite combina pruebas de integración con Spring y pruebas unitarias de controladores con Mockito. No se usa H2.
+Las pruebas de integración usan el perfil `test` y también requieren MySQL local. Inicia el servicio con `docker compose up -d mysql` y luego ejecuta `./mvnw test` desde la raíz del backend. La suite combina pruebas de integración con Spring y pruebas unitarias de controladores con Mockito. No se usa H2.
 
 ## Endpoints de la API
 
