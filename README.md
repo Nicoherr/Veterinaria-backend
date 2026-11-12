@@ -52,6 +52,34 @@ docker compose up --build -d
 
 Compose inicia MySQL y el backend; MySQL persiste sus datos en un volumen Docker. El backend espera a que la base de datos esté lista. Para detener los servicios conserva los datos con `docker compose down`; para borrar también la base local, usa `docker compose down -v`.
 
+### Despliegue en EC2
+
+El despliegue utiliza los dos repositorios como carpetas hermanas. El backend contiene `docker-compose.aws.yml`, que construye el frontend desde `../Veterinaria-frontend`, levanta MySQL y el backend con el perfil `prod`, y sirve la aplicación React compilada con Nginx en el puerto 80. La base de datos es MySQL; esta aplicación no utiliza H2 ni el servidor de desarrollo de Vite.
+
+En EC2, permite en el grupo de seguridad los puertos TCP `80` y `8080` solo desde los clientes necesarios; limita SSH (`22`) a tu IP y no abras MySQL (`3306`) ni Vite (`5173`) al público.
+
+```bash
+mkdir -p ~/vetsm-app
+cd ~/vetsm-app
+git clone https://github.com/Nicoherr/Veterinaria-backend.git Veterinaria-backend
+git clone https://github.com/Nicoherr/Veterinaria-frontend.git Veterinaria-frontend
+cd Veterinaria-backend
+cp .env.example .env
+nano .env
+```
+
+Define `PUBLIC_IP` con la IP pública de EC2. Genera valores únicos para `MYSQL_PASSWORD`, `MYSQL_ROOT_PASSWORD` y `JWT_SECRET` (por ejemplo, `openssl rand -base64 48` para los secretos) y no publiques el archivo `.env`.
+
+Desde `~/vetsm-app/Veterinaria-backend`, inicia y verifica los servicios:
+
+```bash
+docker compose -f docker-compose.aws.yml up --build -d
+docker compose -f docker-compose.aws.yml ps
+docker compose -f docker-compose.aws.yml logs -f backend
+```
+
+La aplicación queda en `http://<PUBLIC_IP>/` y la API en `http://<PUBLIC_IP>:8080/api`. Para detener los contenedores sin borrar los datos, ejecuta `docker compose -f docker-compose.aws.yml down`; `down -v` también elimina el volumen persistente de MySQL.
+
 ### Herramientas
 
 - **Swagger UI:** [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
